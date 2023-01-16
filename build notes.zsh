@@ -35,38 +35,43 @@ PATH+=:"/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin:$airNat
 # cxbottle --create --template win10_64 --bottle DRDX
 bottle=DRDX
 
+# SWF
 amxmlc "$dr/src/base/Brain.as" -compiler.source-path+="$dr/src" -compiler.source-path+="$b2d/Source" -compiler.library-path+="$starling/starling/bin/starling.swc" -compiler.library-path+="$dr/assets/swcs/DR_Audio.swc" -compiler.library-path+="$dr/assets/swcs/DR_Interface.swc" -compiler.library-path+="$dr/assets/swcs/DR_Main.swc" -compiler.library-path+="$dr/assets/swcs/DR_Nodes.swc" -external-library-path+="$steamWrapper" -output Brain.swf
 
+# resources
 cp "$dr/src/base/Brain-app.xml" App.xml
 sed -i '' 's/\[This value will be overwritten by Flash Builder in the output app.xml\]/Brain.swf/' App.xml
-
 cp -R "$dr/src/assets" .
+cp "$steamWrapper" .
+cp "$steam/redistributable_bin/osx/libsteam_api.dylib" .
+cp "$steam/redistributable_bin/win64/steam_api64.dll" .
 
-unzip "$steamWrapper" -d SteamWrapperUnpacked.ane
+mkdir Unpacked
+unzip "$steamWrapper" -d Unpacked/SteamWrapper.ane
 echo 248330 > steam_appid.txt
 
-DYLD_LIBRARY_PATH="$steam/redistributable_bin/osx" adl -profile extendedDesktop -extdir . App.xml
+# test macOS
+DYLD_LIBRARY_PATH="$steam/redistributable_bin/osx" adl -profile extendedDesktop -extdir Unpacked App.xml
 
-wine --bottle "$bottle" "$airWindows/bin/adl.exe" -profile extendedDesktop -extdir . App.xml
+# test Windows
+wine --bottle "$bottle" "$airWindows/bin/adl.exe" -profile extendedDesktop -extdir Unpacked App.xml
 
-rm -rf SteamWrapperUnpacked.ane
-
+# certificate
 adt -certificate -cn Amy 2048-RSA Cert.p12 "$password"
 
-cp "$steamWrapper" .
-
-cp "$steam/redistributable_bin/osx/libsteam_api.dylib" .
+# build macOS
 adt -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle Build.app App.xml Brain.swf assets -extdir . libsteam_api.dylib
 
-# TODO: ugly but adt on Z: drive generates very weird temp file issues
+open Build.app
+
+# build Windows
+# TODO: ugly, but adt on Z: generates very weird temp file issues
 
 c=~/"Library/Application Support/CrossOver/Bottles/$bottle/drive_c"
-cp "$steam/redistributable_bin/win64/steam_api64.dll" .
+rm -rf "$c/Temp"
 cp -R . "$c/Temp"
-cp -R "$jdkWindows" "$c/JDK"
-cp -R "$airWindows" "$c/AIR"
 pushd "$c/Temp"
-wine --bottle "$bottle" 'C:\JDK\bin\java.exe' -jar 'C:\AIR\lib\adt.jar' -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle -arch x64 Build App.xml Brain.swf assets -extdir . steam_api64.dll
+wine --bottle "$bottle" "$jdkWindows/bin/java.exe" -jar "$airWindows/lib/adt.jar" -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle -arch x64 Build App.xml Brain.swf assets -extdir . steam_api64.dll
 popd
 cp -R "$c/Temp/Build" .
 
