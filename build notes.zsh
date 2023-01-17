@@ -28,7 +28,8 @@ bottle=DRDX
 # TODO: figure out building SWCs (paid Flash IDE)
 
 # SWF
-amxmlc "$dr/src/base/Brain.as" -compiler.source-path+="$dr/src" -compiler.source-path+="$b2d/Source" -compiler.library-path+="$starling/starling/bin/starling.swc" -compiler.library-path+="$dr/assets/swcs/DR_Audio.swc" -compiler.library-path+="$dr/assets/swcs/DR_Interface.swc" -compiler.library-path+="$dr/assets/swcs/DR_Main.swc" -compiler.library-path+="$dr/assets/swcs/DR_Nodes.swc" -external-library-path+="$steamWrapper" -output Brain.swf
+debug=false
+amxmlc "$dr/src/base/Brain.as" -compiler.debug=$debug -compiler.source-path+="$dr/src" -compiler.source-path+="$b2d/Source" -compiler.library-path+="$starling/starling/bin/starling.swc" -compiler.library-path+="$dr/assets/swcs/DR_Audio.swc" -compiler.library-path+="$dr/assets/swcs/DR_Interface.swc" -compiler.library-path+="$dr/assets/swcs/DR_Main.swc" -compiler.library-path+="$dr/assets/swcs/DR_Nodes.swc" -external-library-path+="$steamWrapper" -output Brain.swf
 
 # resources
 cp "$dr/src/base/Brain-app.xml" App.xml
@@ -52,7 +53,7 @@ password=correcthorsebatterystaple
 adt -certificate -cn Amy 2048-RSA Cert.p12 "$password"
 
 # build macOS
-adt -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle Build.app App.xml Brain.swf assets -extdir . libsteam_api.dylib
+adt -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle Build.app App.xml Brain.swf assets -extdir . libsteam_api.dylib steam_appid.txt
 
 open Build.app
 
@@ -63,7 +64,7 @@ c=~/"Library/Application Support/CrossOver/Bottles/$bottle/drive_c"
 rm -rf "$c/Temp"
 cp -R . "$c/Temp"
 pushd "$c/Temp"
-wine --bottle "$bottle" "$jdkWindows/bin/java.exe" -jar "$airWindows/lib/adt.jar" -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle -arch x64 Build App.xml Brain.swf assets -extdir . steam_api64.dll
+wine --bottle "$bottle" "$jdkWindows/bin/java.exe" -jar "$airWindows/lib/adt.jar" -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle -arch x64 Build App.xml Brain.swf assets -extdir . steam_api64.dll steam_appid.txt
 popd
 cp -R "$c/Temp/Build" .
 
