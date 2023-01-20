@@ -175,7 +175,8 @@ package
 					}
 					else if(state=="win")
 					{
-						addButton(4,0,2,2,"quit",Keyboard.ENTER)
+						hasGameButtons=true
+						refreshGameButtons()
 					}
 					else if(state=="endLevel")
 					{
@@ -213,7 +214,14 @@ package
 				{
 					addButton(-3,-2,1,2,"boost",Keyboard.SHIFT)
 				}
-				addButton(0,0,1,2,"pause",Keyboard.SPACE)
+				if(state=="game")
+				{
+					addButton(0,0,1,2,"pause",Keyboard.SPACE)
+				}
+				if(state=="win")
+				{
+					addButton(4,0,2,2,"quit",Keyboard.ENTER)
+				}
 			}
 		}
 		
