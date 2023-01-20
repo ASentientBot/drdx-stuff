@@ -39,8 +39,8 @@ package
 			var text:TextField=new TextField()
 			text.autoSize=TextFieldAutoSize.LEFT
 			text.embedFonts=true
+			text.defaultTextFormat=format
 			text.text=name
-			text.setTextFormat(format)
 			text.x=(w-text.width)/2
 			text.y=(h-text.height)/2
 			text.alpha=0.2

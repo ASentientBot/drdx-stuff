@@ -1,5 +1,5 @@
 # drdx-stuff
-Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS, Windows, iOS, Android. Desktop builds are equivalent to Steam version, mobile are playable but incomplete and likely buggy.
+Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS/Windows/iOS/Android. Desktop builds are equivalent to Steam version, mobile are playable but incomplete and likely buggy.
 
 ![](Screenshot.png)
 
@@ -20,3 +20,4 @@ GPL v3 (derivative work of DinoRunDX).
 ./Build.zsh ios build && cp Temp/Build.ipa ~/Desktop/DRDX_iOS.ipa
 ./Build.zsh android build && cp Temp/Build.apk ~/Desktop/DRDX_Android.apk
 ```
+See [releases](https://github.com/ASentientBot/drdx-stuff/releases) for sideloadable mobile apps. (I won't be uploading desktop builds, support Pixeljam by purchasing on [Steam](https://store.steampowered.com/app/248330/Dino_Run_DX/) or [itch.io](https://pixeljam.itch.io/dino-run-dx)!)

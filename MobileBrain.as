@@ -5,6 +5,7 @@ package
 	import flash.events.*
 	import flash.ui.*
 	import flash.utils.*
+	import flash.text.*
 	
 	public class MobileBrain extends Brain
 	{
@@ -25,7 +26,7 @@ package
 		private var hasGameButtons:Boolean
 		private var prevBoost:Boolean
 		
-		private function clearButtons()
+		private function clearButtons():void
 		{
 			controls.removeChildren()
 		}
@@ -80,13 +81,49 @@ package
 			fixLayout()
 		}
 		
-		function frameCallback(event:Event):void
+		private function viewToStringRecursive(view:DisplayObjectContainer,depth:int=1):String
+		{
+			var output:String=""
+			for(var index:int=0;index<view.numChildren;index++)
+			{
+				var child:*=view.getChildAt(index)
+				for(var pad:int=0;pad<depth;pad++)
+				{
+					output+=" "
+				}
+				output+=child
+				if(child is DisplayObject)
+				{
+					output+=" (name: "+child.name+", x: "+child.x+", y: "+child.y+", w: "+child.width+", h: "+child.height+")"
+				}
+				if(child is TextField)
+				{
+					output+=" (text: "+child.text.replace("\r","\\r")+")"
+				}
+				if(child is MovieClip)
+				{
+					output+=" (label: "+child.currentLabel+")"
+				}
+				output+="\n"
+				if(child is DisplayObjectContainer)
+				{
+					output+=viewToStringRecursive(child,depth+1)
+				}
+			}
+			return output
+		}
+		
+		private function frameCallback(event:Event):void
 		{
 			var state:String=gState
 			var view:String=interF.current
 			if(state!=prevState||view!=prevView)
 			{
 				trace("Amy: state changed, brain: "+state+", ui: "+view)
+				
+				// TODO: debugging
+				
+				trace("Amy: ui hierarchy: \n"+viewToStringRecursive(stage))
 				
 				prevState=state
 				prevView=view
