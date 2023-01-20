@@ -1,6 +1,8 @@
 # drdx-stuff
 Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS, Windows, iOS, Android. Desktop builds are equivalent to Steam version, mobile are playable but incomplete and likely buggy.
 
+![](Screenshot.png)
+
 ## dependencies
 - macOS 13
 - WINE (Windows)
