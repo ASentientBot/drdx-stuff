@@ -22,6 +22,8 @@ package
 		private var controls:Sprite
 		private var prevState:String
 		private var prevView:String
+		private var hasGameButtons:Boolean
+		private var prevBoost:Boolean
 		
 		private function clearButtons()
 		{
@@ -90,17 +92,14 @@ package
 				prevView=view
 				
 				clearButtons()
+				hasGameButtons=false
 				
-				if(view=="Race")
+				if(view=="Race"||view=="")
 				{
 					if(state=="game")
 					{
-						addButton(0,-2,2,2,"left",Keyboard.LEFT)
-						addButton(2,-2,2,2,"right",Keyboard.RIGHT)
-						addButton(-2,-2,2,2,"duck",Keyboard.DOWN)
-						addButton(-2,-4,2,2,"jump",Keyboard.UP)
-						addButton(-3,-2,1,2,"boost",Keyboard.SHIFT)
-						addButton(0,0,1,2,"pause",Keyboard.SPACE)
+						hasGameButtons=true
+						refreshGameButtons()
 					}
 					else if(state=="pause")
 					{
@@ -123,7 +122,43 @@ package
 					{
 						addButton(4,0,2,2,"quit",Keyboard.ENTER)
 					}
+					else if(state=="endLevel")
+					{
+						addButton(3.5,0,3,2,"continue",Keyboard.SPACE)
+					}
 				}
+			}
+			
+			if(hasGameButtons)
+			{
+				if(prevBoost&&dino.adren<1000)
+				{
+					trace("Amy: hide boost")
+					prevBoost=false
+					refreshGameButtons()
+				}
+				if(!prevBoost&&dino.adren>=1000)
+				{
+					trace("Amy: show boost")
+					prevBoost=true
+					refreshGameButtons()
+				}
+			}
+			
+			// TODO: not exactly efficient
+			
+			function refreshGameButtons():void
+			{
+				clearButtons()
+				addButton(0,-2,2,2,"left",Keyboard.LEFT)
+				addButton(2,-2,2,2,"right",Keyboard.RIGHT)
+				addButton(-2,-2,2,2,"duck",Keyboard.DOWN)
+				addButton(-2,-4,2,2,"jump",Keyboard.UP)
+				if(dino.adren>=1000)
+				{
+					addButton(-3,-2,1,2,"boost",Keyboard.SHIFT)
+				}
+				addButton(0,0,1,2,"pause",Keyboard.SPACE)
 			}
 		}
 		
