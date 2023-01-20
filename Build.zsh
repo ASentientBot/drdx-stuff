@@ -1,13 +1,11 @@
 set -e
 cd "$(dirname "$0")"
 
-# TODO: these cases are getting kind of clunky, refactor?
-
 target=$1
 mode=$2
 if [[ -z $target || -z $mode ]]
 then
-	echo "usage: $0 (mac, windows, ios, android, mac_mobile) (test, build, build_run)"
+	echo "usage: $0 (mac, windows, ios, android, mac_mobile) (test, build)"
 	exit 1
 fi
 echo "target: $target, mode: $mode"
@@ -97,14 +95,9 @@ then
 		DYLD_LIBRARY_PATH="$steam/redistributable_bin/osx" adl -profile extendedDesktop -extdir Unpacked App.xml
 	fi
 
-	if [[ $mode = build || $mode = build_run ]]
+	if [[ $mode = build ]]
 	then
 		adt -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle Build.app App.xml Brain.swf assets -extdir . libsteam_api.dylib steam_appid.txt
-	fi
-
-	if [[ $mode = build_run ]]
-	then
-		Build.app/Contents/MacOS/*
 	fi
 fi
 
@@ -120,16 +113,9 @@ then
 		wine64 "$airWindows/bin/adl.exe" -profile extendedDesktop -extdir Unpacked App.xml
 	fi
 
-	if [[ $mode = build || $mode = build_run ]]
+	if [[ $mode = build ]]
 	then
 		wine64 "$jdkWindows/bin/java.exe" -jar "$airWindows/lib/adt.jar" -package -storetype pkcs12 -keystore Cert.p12 -storepass "$password" -target bundle -arch x64 Build App.xml Brain.swf assets -extdir . steam_api64.dll steam_appid.txt
-	fi
-
-	if [[ $mode = build_run ]]
-	then
-		# TODO: black screen on non-CrossOver WINE
-
-		wine64 Build/*.exe
 	fi
 fi
 
@@ -162,14 +148,11 @@ then
 	codesign -fs - --deep Payload/*app
 	zip -r Build.ipa Payload
 
-	if [[ $mode = build_run || $mode = test ]]
+	if [[ $mode = test ]]
 	then
 		scp -P $iosPort Build.ipa "$iosHost":/var/root
 		ssh -p $iosPort "$iosHost" appinst Build.ipa
-	fi
 
-	if [[ $mode = test ]]
-	then
 		# TODO: possible to avoid typing "run" every time?
 
 		fdb
@@ -178,10 +161,10 @@ fi
 
 if [[ $target = android ]]
 then
-	if [[ $mode = build || $mode = build_run ]]
+	if [[ $mode = build ]]
 	then
 		adt -package -target apk-captive-runtime -storetype pkcs12 -keystore Cert.p12 -storepass "$password" Build.apk AppMobile.xml Brain.swf assets
 	fi
 
-	# TODO: implement test, build_run
+	# TODO: implement test
 fi
