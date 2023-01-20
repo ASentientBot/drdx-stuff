@@ -20,41 +20,34 @@ package
 		private const PADDING_FACTOR:Number=0.1
 		
 		private var controls:Sprite
+		private var prevState:String
+		private var prevView:String
 		
-		private function hideButtons()
+		private function clearButtons()
 		{
 			controls.removeChildren()
 		}
 		
-		// TODO: would make more sense to just add one at a time...
+		// TODO: clean up size calculations...
 		
-		private function showButtons(xs:Array,ys:Array,ws:Array,hs:Array,names:Array,keys:Array)
+		private function addButton(x:Number,y:Number,w:Number,h:Number,name:String,key:int):void
 		{
-			hideButtons()
-			
-			// TODO: art/font/integration into UI
-			// TODO: customizable layout?
-			// TODO: hook into code instead of dispatching key events?
-			// TODO: gestures?
-			// TODO: ability to lock/toggle buttons down?
-			
 			var tileWidth:Number=stage.stageWidth/TILE_COUNT
 			var tileHeight:Number=stage.stageHeight/TILE_COUNT
 			var padding:Number=tileWidth*PADDING_FACTOR
 			
-			for(var index:int=0;index<xs.length;index++)
+			var fontSize:Number=w>1?padding*5:padding*2
+			
+			var button:Button=new Button(w*tileWidth,h*tileHeight,padding,name,fontSize,callback,key)
+			button.x=x>=0?x*tileWidth:stage.stageWidth+x*tileWidth
+			button.y=y>=0?y*tileHeight:stage.stageHeight+y*tileHeight
+			
+			function callback(down:Boolean,key:int):void
 			{
-				var button:Button=new Button(ws[index]*tileWidth,hs[index]*tileHeight,padding,names[index],buttonCallback,keys[index])
-				button.x=xs[index]>=0?xs[index]*tileWidth:stage.stageWidth+xs[index]*tileWidth
-				button.y=ys[index]>=0?ys[index]*tileHeight:stage.stageHeight+ys[index]*tileHeight
-				
-				function buttonCallback(down:Boolean,key:int):void
-				{
-					stage.dispatchEvent(new KeyboardEvent(down?KeyboardEvent.KEY_DOWN:KeyboardEvent.KEY_UP,true,false,0,key))
-				}
-				
-				controls.addChild(button)
+				stage.dispatchEvent(new KeyboardEvent(down?KeyboardEvent.KEY_DOWN:KeyboardEvent.KEY_UP,true,false,0,key))
 			}
+			
+			controls.addChild(button)
 		}
 		
 		private function fixLayout():void
@@ -79,9 +72,66 @@ package
 			}
 		}
 		
-		private function hookConstruct():void
+		private function resizeCallback(event:Event):void
+		{
+			trace("Amy: resized width: "+stage.stageWidth+", height: "+stage.stageHeight)
+			fixLayout()
+		}
+		
+		function frameCallback(event:Event):void
+		{
+			var state:String=gState
+			var view:String=interF.current
+			if(state!=prevState||view!=prevView)
+			{
+				trace("Amy: state changed, brain: "+state+", ui: "+view)
+				
+				prevState=state
+				prevView=view
+				
+				clearButtons()
+				
+				if(view=="Race")
+				{
+					if(state=="game")
+					{
+						addButton(0,-2,2,2,"left",Keyboard.LEFT)
+						addButton(2,-2,2,2,"right",Keyboard.RIGHT)
+						addButton(-2,-2,2,2,"duck",Keyboard.DOWN)
+						addButton(-2,-4,2,2,"jump",Keyboard.UP)
+						addButton(-3,-2,1,2,"boost",Keyboard.SHIFT)
+						addButton(0,0,1,2,"pause",Keyboard.SPACE)
+					}
+					else if(state=="pause")
+					{
+						addButton(0,0,3,2,"resume",Keyboard.SPACE)
+						addButton(-2,0,2,2,"quit",Keyboard.ENTER)
+					}
+					else if(state=="extinct")
+					{
+						if(sys2.stats.cont>0)
+						{
+							addButton(0,0,3,2,"retry",Keyboard.SPACE)
+							addButton(-2,0,2,2,"quit",Keyboard.ENTER)
+						}
+						else
+						{
+							addButton(4,0,2,2,"quit",Keyboard.ENTER)
+						}
+					}
+					else if(state=="win")
+					{
+						addButton(4,0,2,2,"quit",Keyboard.ENTER)
+					}
+				}
+			}
+		}
+		
+		public function MobileBrain()
 		{
 			trace("Amy: constructor hook")
+			
+			super()
 			
 			Multitouch.inputMode=MultitouchInputMode.TOUCH_POINT
 			
@@ -89,12 +139,6 @@ package
 			stage.align=StageAlign.TOP_LEFT
 			stage.color=NORMAL_COLOR
 			stage.frameRate=NORMAL_FPS
-			
-			function resizeCallback(event:Event):void
-			{
-				trace("Amy: resized width: "+stage.stageWidth+", height: "+stage.stageHeight)
-				fixLayout()
-			}
 			
 			stage.addEventListener(Event.RESIZE,resizeCallback)
 			fixLayout()
@@ -104,73 +148,7 @@ package
 			controls=new Sprite()
 			stage.addChild(controls)
 			
-			var state:String=null
-			var view:String=null
-			function frameCallback(event:Event):void
-			{
-				if(gState==state&&interF.current==view)
-				{
-					return
-				}
-				state=gState
-				view=interF.current
-				
-				trace("Amy: state changed, brain: "+state+", ui: "+view)
-				
-				// TODO: cleanup
-				
-				switch(state)
-				{
-					case "game":
-						showButtons([0,2,-2,-2,-3,0],[-2,-2,-2,-4,-2,0],[2,2,2,2,1,1],[2,2,2,2,2,2],["left","right","duck","jump","boost","pause"],[Keyboard.LEFT,Keyboard.RIGHT,Keyboard.DOWN,Keyboard.UP,Keyboard.SHIFT,Keyboard.SPACE])
-						break
-					
-					// TODO: more specific
-					
-					case "pause":
-						if(view=="Main")
-						{
-							hideButtons()
-							break
-						}
-					case "extinct":
-					case "endLevel":
-					case "win":
-						showButtons([0,5],[-2,-2],[5,5],[2,2],["continue","quit"],[Keyboard.SPACE,Keyboard.ENTER])
-						break
-					
-					default:
-						hideButtons()
-				}
-			}
-			
 			stage.addEventListener(Event.ENTER_FRAME,frameCallback)
-		}
-		
-		public function MobileBrain()
-		{
-			super()
-			hookConstruct()
-		}
-		
-		// TODO: remove unused hooks
-		
-		public override function newLevel(retry:*,level:*):*
-		{
-			super.newLevel(retry,level)
-			trace("Amy: start game hook")
-		}
-		
-		public override function gameOver():*
-		{
-			super.gameOver()
-			trace("Amy: death hook")
-		}
-		
-		public override function restart():*
-		{
-			super.restart()
-			trace("Amy: end game hook")
 		}
 	}
 }
