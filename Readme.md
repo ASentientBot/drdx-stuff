@@ -11,7 +11,7 @@ Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS/Windows/iOS/An
 - FRESteamworks, Steamworks SDK (desktop)
 
 ## license
-GPL v3 (derivative work of DinoRunDX).
+GPL v3 (derivative work of DinoRunDX). Support Pixeljam by purchasing on [Steam](https://store.steampowered.com/app/248330/Dino_Run_DX/) or [itch.io](https://pixeljam.itch.io/dino-run-dx)!
 
 ## run
 ```zsh
@@ -22,4 +22,13 @@ GPL v3 (derivative work of DinoRunDX).
 ```
 
 ## builds
-See [releases](https://github.com/ASentientBot/drdx-stuff/releases) for sideloadable mobile apps. (For desktop builds, support Pixeljam by purchasing on [Steam](https://store.steampowered.com/app/248330/Dino_Run_DX/) or [itch.io](https://pixeljam.itch.io/dino-run-dx)!)
+See [releases](https://github.com/ASentientBot/drdx-stuff/releases) for sideloadable IPA/APK files.
+
+## mobile app progress
+- [x] compiles and runs on iOS/Android
+- [x] minimal touch inputs that allow completing the game
+- [ ] adjustments to make main menu, upgrade screen, etc. more touch-friendly
+- [ ] proper pause/continue/doom/win menus replacing my ugly buttons
+- [ ] customizable control layout?
+- [ ] alternate tap/gesture based controls?
+- [ ] ?

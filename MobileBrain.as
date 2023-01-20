@@ -223,6 +223,8 @@ package
 			
 			super()
 			
+			Config.STEAM=false
+			
 			Multitouch.inputMode=MultitouchInputMode.TOUCH_POINT
 			
 			stage.scaleMode=StageScaleMode.NO_SCALE
