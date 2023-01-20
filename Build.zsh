@@ -26,6 +26,7 @@ password='correct horse battery staple'
 
 iosHost=root@localhost
 iosPort=2222
+iosDebugHost=zoe.local
 
 PATH="$wine/bin:$jdk/Contents/Home/bin:$air/bin:$PATH"
 
@@ -142,7 +143,7 @@ then
 
 	cp ../Default*.png .
 
-	adt -package -target ipa-debug -connect -storetype pkcs12 -keystore Cert2.p12 -storepass "$password" -provisioning-profile Fake.mobileprovision Build.ipa AppMobile.xml Brain.swf assets Default*.png
+	adt -package -target ipa-debug -connect "$iosDebugHost" -storetype pkcs12 -keystore Cert2.p12 -storepass "$password" -provisioning-profile Fake.mobileprovision Build.ipa AppMobile.xml Brain.swf assets Default*.png
 
 	unzip Build.ipa
 	codesign -fs - --deep Payload/*app
@@ -153,7 +154,7 @@ then
 		scp -P $iosPort Build.ipa "$iosHost":/var/root
 		ssh -p $iosPort "$iosHost" appinst Build.ipa
 
-		# TODO: possible to avoid typing "run" every time?
+		# TODO: possible to avoid typing "r" and "c" every time?
 
 		fdb
 	fi

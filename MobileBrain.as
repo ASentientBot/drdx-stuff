@@ -63,7 +63,8 @@ package
 				scaleY=widthRatio
 				var extraHeight:Number=widthRatio*NORMAL_HEIGHT-stage.stageHeight
 				y=extraHeight/-2
-				trace("Amy: wide, scale: "+scaleX+", y: "+y)
+				x=0
+				trace("Amy: screen is wide, scale: "+scaleX+", y: "+y)
 			}
 			else
 			{
@@ -71,7 +72,8 @@ package
 				scaleY=heightRatio
 				var extraWidth:Number=heightRatio*NORMAL_WIDTH-stage.stageWidth
 				x=extraWidth/-2
-				trace("Amy: tall, scale: "+scaleX+", x: "+x)
+				y=0
+				trace("Amy: screen is tall, scale: "+scaleX+", x: "+x)
 			}
 		}
 		
@@ -81,7 +83,7 @@ package
 			fixLayout()
 		}
 		
-		private function viewToStringRecursive(view:DisplayObjectContainer,depth:int=1):String
+		private function debugViewToStringRecursive(view:DisplayObjectContainer,depth:int=1):String
 		{
 			var output:String=""
 			for(var index:int=0;index<view.numChildren;index++)
@@ -107,10 +109,26 @@ package
 				output+="\n"
 				if(child is DisplayObjectContainer)
 				{
-					output+=viewToStringRecursive(child,depth+1)
+					output+=debugViewToStringRecursive(child,depth+1)
 				}
 			}
 			return output
+		}
+		
+		private function debugPrintViewHierarchy():void
+		{
+			trace("Amy: view hierarchy: \n"+debugViewToStringRecursive(stage,1))
+		}
+		
+		private function debugPrintFonts():void
+		{
+			var fonts:Array=Font.enumerateFonts()
+			var fontString:String=""
+			for(var index:int in fonts)
+			{
+				fontString+=fonts[index].fontName+", "
+			}
+			trace("Amy: available fonts: "+fontString)
 		}
 		
 		private function frameCallback(event:Event):void
@@ -123,7 +141,7 @@ package
 				
 				// TODO: debugging
 				
-				trace("Amy: ui hierarchy: \n"+viewToStringRecursive(stage))
+				debugPrintViewHierarchy()
 				
 				prevState=state
 				prevView=view
@@ -214,8 +232,6 @@ package
 			
 			stage.addEventListener(Event.RESIZE,resizeCallback)
 			fixLayout()
-			
-			// TODO: on iPhone SE, intermittently opens shifted left?
 			
 			controls=new Sprite()
 			stage.addChild(controls)

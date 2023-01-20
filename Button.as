@@ -17,14 +17,6 @@ package
 		{
 			super()
 			
-			/*var fonts:Array=Font.enumerateFonts()
-			var fontString:String=""
-			for(var index:int in fonts)
-			{
-				fontString+=fonts[index].fontName+", "
-			}
-			trace("Amy: available fonts: "+fontString)*/
-			
 			this.w=w
 			this.h=h
 			this.padding=padding
