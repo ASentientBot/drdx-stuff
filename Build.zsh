@@ -1,6 +1,8 @@
 set -e
 cd "$(dirname "$0")"
 
+# TODO: these cases are getting kind of clunky, refactor?
+
 target=$1
 mode=$2
 if [[ -z $target || -z $mode ]]
@@ -73,23 +75,20 @@ then
 	unzip "$steamWrapper" -d "Unpacked/$(basename "$steamWrapper")"
 fi
 
-if [[ $mode = build || $mode = build_run ]]
-then
-	# TODO: why are these incompatible?
+# TODO: why are these incompatible?
 
-	adt -certificate -cn Amy 2048-RSA Cert.p12 "$password"
+adt -certificate -cn Amy 2048-RSA Cert.p12 "$password"
 
-	openssl genrsa -out Cert.key 2048
-	openssl req -x509 -new -subj '/CN=Amy/OU=Amy' -nodes -key Cert.key -sha256 -days 9999 -out Cert.crt
-	openssl pkcs12 -export -passout pass:"$password" -out Cert2.p12 -inkey Cert.key -in Cert.crt
+openssl genrsa -out Cert.key 2048
+openssl req -x509 -new -subj '/CN=Amy/OU=Amy' -nodes -key Cert.key -sha256 -days 9999 -out Cert.crt
+openssl pkcs12 -export -passout pass:"$password" -out Cert2.p12 -inkey Cert.key -in Cert.crt
 
-	defaults write "$PWD/Fake.plist" ApplicationIdentifierPrefix -array -string ''
-	defaults write "$PWD/Fake.plist" Platform -array -string iOS
-	plutil -convert xml1 Fake.plist
-	security create-keychain -p "$password" "$PWD/Fake.keychain"
-	security import Cert2.p12 -k "$PWD/Fake.keychain" -P "$password"
-	security cms -S -k "$PWD/Fake.keychain" -N Fake -i Fake.plist -o Fake.mobileprovision
-fi
+defaults write "$PWD/Fake.plist" ApplicationIdentifierPrefix -array -string ''
+defaults write "$PWD/Fake.plist" Platform -array -string iOS
+plutil -convert xml1 Fake.plist
+security create-keychain -p "$password" "$PWD/Fake.keychain"
+security import Cert2.p12 -k "$PWD/Fake.keychain" -P "$password"
+security cms -S -k "$PWD/Fake.keychain" -N Fake -i Fake.plist -o Fake.mobileprovision
 
 if [[ $target = mac || $target = mac_mobile ]]
 then
@@ -134,40 +133,55 @@ then
 	fi
 fi
 
+if [[ $target = ios || $target = android ]]
+then
+	# TODO: ugly, is there some PlistBuddy/defaults-like tool for XML?
+
+	cp App.xml AppMobile.xml
+	sed -i '' 's/<extensionID>com.amanitadesign.steam.FRESteamWorks<\/extensionID>//' AppMobile.xml
+	sed -i '' 's/<\/initialWindow>/<aspectRatio>landscape<\/aspectRatio><\/initialWindow>/' AppMobile.xml
+fi
+
 if [[ $target = ios ]]
 then
 	# TODO: support unjailbroken provisioning/signing
 
-	if [[ $mode = build || $mode = build_run ]]
+	# TODO: confirm performance on armv7 devices is unacceptable
+	# in case building on ≤ Mojave or messing with no32exec=0 again is worthwhile...
+	# (setting iOS ≥ 11 is the only way to prevent adt from failing on stock Ventura)
+
+	sed -i '' 's/<\/application>/<iPhone><InfoAdditions><![CDATA[<key>MinimumOSVersion<\/key><string>11.0<\/string>]]><\/InfoAdditions><requestedDisplayResolution>high<\/requestedDisplayResolution><\/iPhone><\/application>/' AppMobile.xml
+
+	# TODO: proper launch images (currently just convinces AIR im aware of iPhone 5)
+
+	cp ../Default*.png .
+
+	adt -package -target ipa-debug -connect -storetype pkcs12 -keystore Cert2.p12 -storepass "$password" -provisioning-profile Fake.mobileprovision Build.ipa AppMobile.xml Brain.swf assets Default*.png
+
+	unzip Build.ipa
+	codesign -fs - --deep Payload/*app
+	zip -r Build.ipa Payload
+
+	if [[ $mode = build_run || $mode = test ]]
 	then
-		# TODO: ugly, is there some PlistBuddy/defaults-like tool for XML?
-
-		cp App.xml AppMobile.xml
-		sed -i '' 's/<extensionID>com.amanitadesign.steam.FRESteamWorks<\/extensionID>//' AppMobile.xml
-		sed -i '' 's/<\/application>/<iPhone><InfoAdditions><![CDATA[<key>MinimumOSVersion<\/key><string>11.0<\/string>]]><\/InfoAdditions><requestedDisplayResolution>high<\/requestedDisplayResolution><\/iPhone><\/application>/' AppMobile.xml
-
-		adt -package -target ipa-debug -connect -storetype pkcs12 -keystore Cert2.p12 -storepass "$password" -provisioning-profile Fake.mobileprovision Build.ipa AppMobile.xml Brain.swf assets
-
-		unzip Build.ipa
-		codesign -fs - --deep Payload/*app
-		zip -r Build.ipa Payload
+		scp -P $iosPort Build.ipa "$iosHost":/var/root
+		ssh -p $iosPort "$iosHost" appinst Build.ipa
 	fi
 
 	if [[ $mode = test ]]
 	then
-		# TODO: fdb
-		:
-	fi
+		# TODO: possible to avoid typing "run" every time?
 
-	if [[ $mode = build_run ]]
-	then
-		scp -P $iosPort Build.ipa "$iosHost":/var/root
-		ssh -p $iosPort "$iosHost" appinst Build.ipa
+		fdb
 	fi
 fi
 
 if [[ $target = android ]]
 then
-	# TODO: implement
-	:
+	if [[ $mode = build || $mode = build_run ]]
+	then
+		adt -package -target apk-captive-runtime -storetype pkcs12 -keystore Cert.p12 -storepass "$password" Build.apk AppMobile.xml Brain.swf assets
+	fi
+
+	# TODO: implement test, build_run
 fi

@@ -4,115 +4,173 @@ package
 	import flash.display.*
 	import flash.events.*
 	import flash.ui.*
-	import flash.text.*
-	
-	// TODO: just copied from Brain.as
-	// how is aspect ratio supposed to work? can we do 60/120 fps?
-	
-	[SWF(width="900",height="550",frameRate="50",backgroundColor="#000000")]
+	import flash.utils.*
 	
 	public class MobileBrain extends Brain
 	{
+		// TODO: seems like various stuff is hardcoded to expect these (from Brain.as)
+		// how feasible will it be to increase resolution (without scaling) or framerate?
+		
+		private const NORMAL_WIDTH:int=900
+		private const NORMAL_HEIGHT:int=550
+		private const NORMAL_FPS:int=50
+		private const NORMAL_COLOR:int=0x000000
+		
 		private const TILE_COUNT:Number=10
 		private const PADDING_FACTOR:Number=0.1
-		private const BUTTONS_X:Array=[0,2,-1,-2,-2,0,-1]
-		private const BUTTONS_Y:Array=[-2,-2,-2,-4,-2,0,0]
-		private const BUTTONS_W:Array=[2,2,1,2,1,1,1]
-		private const BUTTONS_H:Array=[2,2,2,2,2,1,1]
-		private const BUTTONS_NAME:Array=["left","right","down","up","shift","space","return"]
-		private const BUTTONS_KEY:Array=[Keyboard.LEFT,Keyboard.RIGHT,Keyboard.DOWN,Keyboard.UP,Keyboard.SHIFT,Keyboard.SPACE,Keyboard.ENTER]
 		
 		private var controls:Sprite
 		
-		private function hook_construct():void
+		private function hideButtons()
 		{
+			controls.removeChildren()
 		}
 		
-		private function hook_init():void
+		// TODO: would make more sense to just add one at a time...
+		
+		private function showButtons(xs:Array,ys:Array,ws:Array,hs:Array,names:Array,keys:Array)
 		{
-			stage.setAspectRatio(StageAspectRatio.LANDSCAPE)
-			Multitouch.inputMode=MultitouchInputMode.TOUCH_POINT
+			hideButtons()
 			
-			// TODO: primitive!
-			// adapt buttons on context
-			// art
-			// customizable layout?
-			// hook into code instead of dispatching key events?
-			// gestures?
-			// pause/retry very janky, should be integrated into UI
-			
-			controls=new Sprite()
+			// TODO: art/font/integration into UI
+			// TODO: customizable layout?
+			// TODO: hook into code instead of dispatching key events?
+			// TODO: gestures?
+			// TODO: ability to lock/toggle buttons down?
 			
 			var tileWidth:Number=stage.stageWidth/TILE_COUNT
 			var tileHeight:Number=stage.stageHeight/TILE_COUNT
 			var padding:Number=tileWidth*PADDING_FACTOR
 			
-			var format:TextFormat=new TextFormat()
-			format.size=tileHeight/3
-			format.font="Menlo"
-			
-			for(var index:int=0;index<BUTTONS_X.length;index++)
+			for(var index:int=0;index<xs.length;index++)
 			{
-				var button:Sprite=new Sprite()
-				button.x=BUTTONS_X[index]>=0?BUTTONS_X[index]*tileWidth:stage.stageWidth+BUTTONS_X[index]*tileWidth
-				button.y=BUTTONS_Y[index]>=0?BUTTONS_Y[index]*tileHeight:stage.stageHeight+BUTTONS_Y[index]*tileHeight
-				button.graphics.beginFill(0xFFFFFF,0.3)
-				button.graphics.drawRect(padding/2,padding/2,BUTTONS_W[index]*tileWidth-padding,BUTTONS_H[index]*tileHeight-padding)
-				button.graphics.endFill()
+				var button:Button=new Button(ws[index]*tileWidth,hs[index]*tileHeight,padding,names[index],buttonCallback,keys[index])
+				button.x=xs[index]>=0?xs[index]*tileWidth:stage.stageWidth+xs[index]*tileWidth
+				button.y=ys[index]>=0?ys[index]*tileHeight:stage.stageHeight+ys[index]*tileHeight
 				
-				var text:TextField=new TextField()
-				text.defaultTextFormat=format
-				text.text=BUTTONS_NAME[index]
-				text.x=padding
-				text.y=padding
-				button.addChild(text)
-				button.mouseChildren=false
-				
-				function makeCallback(key:int,down:Boolean):Function
+				function buttonCallback(down:Boolean,key:int):void
 				{
-					return function(event:Event):void
-					{
-						stage.dispatchEvent(new KeyboardEvent(down?KeyboardEvent.KEY_DOWN:KeyboardEvent.KEY_UP,true,false,0,key))
-					}
+					stage.dispatchEvent(new KeyboardEvent(down?KeyboardEvent.KEY_DOWN:KeyboardEvent.KEY_UP,true,false,0,key))
 				}
-				
-				button.addEventListener(TouchEvent.TOUCH_BEGIN,makeCallback(BUTTONS_KEY[index],true))
-				button.addEventListener(TouchEvent.TOUCH_OVER,makeCallback(BUTTONS_KEY[index],true))
-				button.addEventListener(TouchEvent.TOUCH_END,makeCallback(BUTTONS_KEY[index],false))
-				button.addEventListener(TouchEvent.TOUCH_OUT,makeCallback(BUTTONS_KEY[index],false))
-				
-				button.addEventListener(MouseEvent.MOUSE_DOWN,makeCallback(BUTTONS_KEY[index],true))
-				button.addEventListener(MouseEvent.MOUSE_UP,makeCallback(BUTTONS_KEY[index],false))
 				
 				controls.addChild(button)
 			}
-			
-			addChild(controls)
 		}
 		
-		private function hook_death():void
+		private function fixLayout():void
 		{
-			// TODO: not exactly ideal
+			var widthRatio:Number=stage.stageWidth/NORMAL_WIDTH
+			var heightRatio:Number=stage.stageHeight/NORMAL_HEIGHT
+			if(widthRatio>heightRatio)
+			{
+				scaleX=widthRatio
+				scaleY=widthRatio
+				var extraHeight:Number=widthRatio*NORMAL_HEIGHT-stage.stageHeight
+				y=extraHeight/-2
+				trace("Amy: wide, scale: "+scaleX+", y: "+y)
+			}
+			else
+			{
+				scaleX=heightRatio
+				scaleY=heightRatio
+				var extraWidth:Number=heightRatio*NORMAL_WIDTH-stage.stageWidth
+				x=extraWidth/-2
+				trace("Amy: tall, scale: "+scaleX+", x: "+x)
+			}
+		}
+		
+		private function hookConstruct():void
+		{
+			trace("Amy: constructor hook")
 			
-			setChildIndex(controls,numChildren-1)
+			Multitouch.inputMode=MultitouchInputMode.TOUCH_POINT
+			
+			stage.scaleMode=StageScaleMode.NO_SCALE
+			stage.align=StageAlign.TOP_LEFT
+			stage.color=NORMAL_COLOR
+			stage.frameRate=NORMAL_FPS
+			
+			function resizeCallback(event:Event):void
+			{
+				trace("Amy: resized width: "+stage.stageWidth+", height: "+stage.stageHeight)
+				fixLayout()
+			}
+			
+			stage.addEventListener(Event.RESIZE,resizeCallback)
+			fixLayout()
+			
+			// TODO: on iPhone SE, intermittently opens shifted left?
+			
+			controls=new Sprite()
+			stage.addChild(controls)
+			
+			var state:String=null
+			var view:String=null
+			function frameCallback(event:Event):void
+			{
+				if(gState==state&&interF.current==view)
+				{
+					return
+				}
+				state=gState
+				view=interF.current
+				
+				trace("Amy: state changed, brain: "+state+", ui: "+view)
+				
+				// TODO: cleanup
+				
+				switch(state)
+				{
+					case "game":
+						showButtons([0,2,-2,-2,-3,0],[-2,-2,-2,-4,-2,0],[2,2,2,2,1,1],[2,2,2,2,2,2],["left","right","duck","jump","boost","pause"],[Keyboard.LEFT,Keyboard.RIGHT,Keyboard.DOWN,Keyboard.UP,Keyboard.SHIFT,Keyboard.SPACE])
+						break
+					
+					// TODO: more specific
+					
+					case "pause":
+						if(view=="Main")
+						{
+							hideButtons()
+							break
+						}
+					case "extinct":
+					case "endLevel":
+					case "win":
+						showButtons([0,5],[-2,-2],[5,5],[2,2],["continue","quit"],[Keyboard.SPACE,Keyboard.ENTER])
+						break
+					
+					default:
+						hideButtons()
+				}
+			}
+			
+			stage.addEventListener(Event.ENTER_FRAME,frameCallback)
 		}
 		
 		public function MobileBrain()
 		{
 			super()
-			hook_construct()
+			hookConstruct()
 		}
 		
-		public override function init(event:Event):*
+		// TODO: remove unused hooks
+		
+		public override function newLevel(retry:*,level:*):*
 		{
-			super.init(event)
-			hook_init()
+			super.newLevel(retry,level)
+			trace("Amy: start game hook")
 		}
 		
 		public override function gameOver():*
 		{
 			super.gameOver()
-			hook_death()
+			trace("Amy: death hook")
+		}
+		
+		public override function restart():*
+		{
+			super.restart()
+			trace("Amy: end game hook")
 		}
 	}
 }
