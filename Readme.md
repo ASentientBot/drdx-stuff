@@ -1,5 +1,5 @@
 # drdx-stuff
-Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS/Windows/iOS/Android. Desktop builds are equivalent to Steam version, mobile are playable but incomplete and likely buggy.
+Compile [DinoRunDX](https://github.com/pixeljam/DinoRunDX) for macOS/Windows/iOS/Android with enhancements. Desktop builds are equivalent to Steam version, mobile are playable but incomplete and likely buggy.
 
 ![](Screenshot.png)
 
@@ -8,7 +8,7 @@ Compile [source](https://github.com/pixeljam/DinoRunDX) for macOS/Windows/iOS/An
 - WINE (Windows)
 - Adobe AIR 32 compiler
 - JDK 8 (macOS), 19 (Windows)
-- FRESteamworks, Steamworks SDK (desktop)
+- FRESteamworks ([waveofthought fork](https://github.com/waveofthought-code/FRESteamWorks)), Steamworks SDK (desktop)
 
 ## license
 GPL v3 (derivative work of DinoRunDX). Support Pixeljam by purchasing on [Steam](https://store.steampowered.com/app/248330/Dino_Run_DX/) or [itch.io](https://pixeljam.itch.io/dino-run-dx)!
